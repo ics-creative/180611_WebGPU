@@ -5,6 +5,10 @@
   <meta charset="UTF-8"/>
   <title>WebGPU Hello World demo</title>
   <link rel="stylesheet" href="shared.css"/>
+  <script type="module">
+    import {init} from "./main.js";
+    init();
+  </script>
 </head>
 <body>
   <canvas></canvas>
@@ -16,155 +20,5 @@
       Advanced), then Develop → Experimental Features → Enable WebGPU.
     </p>
   </div>
-  <script>
-    window.addEventListener('DOMContentLoaded', init);
-
-    // シェーダーを定義しておく
-    // language=x-shader/x-metal
-    const shader = `
-#include <metal_stdlib>
-
-using namespace metal;
-
-// 構造体を定義
-struct MyVertex {
-    // 座標
-    float4 position [[position]];
-    // 色
-    float4 color;
-};
-
-// 頂点シェーダー
-vertex MyVertex myVertexShader(device float4 *position [[ buffer(0) ]],
-                               device float4 *color [[ buffer(1) ]],
-                               uint vid [[vertex_id]]) {
-    MyVertex v;
-    // 0番目のバッファーから頂点座標を設定
-    v.position = position[vid];
-    // 1番目のバッファーから頂点に色を設定
-    v.color = color[vid];
-    return v;
-}
-
-// 断片シェーダー
-fragment float4 myFragmentShader(MyVertex vertexIn [[stage_in]]) {
-    // 塗りの色を指定
-    return vertexIn.color;
-}
-
-`;
-
-    const positionData = new Float32Array([
-      +0.00, +0.75, 0, +1,
-      +0.75, -0.75, 0, +1,
-      -0.75, -0.75, 0, +1
-    ]);
-
-    const colorData = new Float32Array([
-      1, 1, 1, 1,
-      1, 1, 0, 1,
-      1, 0, 1, 1,
-    ]);
-
-    let gpu;
-    let commandQueue;
-    let renderPassDescriptor;
-    let renderPipelineState;
-    let bufferPosition;
-    let bufferColor;
-
-    function init() {
-
-      // WebGPUをサポートしているか判定
-      if (!('WebGPURenderingContext' in window)) {
-        // WebGPUをサポートしていない場合は終了
-        document.body.className = 'error';
-        return;
-      }
-
-      // ビューを初期化
-      initLayer();
-
-      // Metalのセットアップ
-      setupMetal();
-      // バッファーを作成
-      makeBuffers();
-      // パイプラインを作成
-      makePipeline();
-      // 描画
-      draw();
-
-      function initLayer() {
-        // canvas 要素を取得
-        const canvas = document.querySelector('canvas');
-        const canvasSize = canvas.getBoundingClientRect();
-        canvas.width = canvasSize.width * devicePixelRatio;
-        canvas.height = canvasSize.height * devicePixelRatio;
-
-        // WebGPUのコンテキストを取得
-        gpu = canvas.getContext('webgpu');
-      }
-
-      function setupMetal() {
-        // コマンドキューを作成
-        commandQueue = gpu.createCommandQueue();
-
-        // レンダーパスを作成
-        renderPassDescriptor = new WebGPURenderPassDescriptor();
-        // このRender Passが実行されるときの挙動を設定
-        renderPassDescriptor.colorAttachments[0].loadAction = gpu.LoadActionClear;
-        renderPassDescriptor.colorAttachments[0].storeAction = gpu.StoreActionStore;
-        // 背景色は黒にする
-        renderPassDescriptor.colorAttachments[0].clearColor = [0.0, 0.0, 0.0, 1.0];
-      }
-
-      function makePipeline() {
-        // Metalのシェーダーを読み込む
-        const library = gpu.createLibrary(shader);
-        const funcVertex = library.functionWithName('myVertexShader');
-        const funcFragment = library.functionWithName('myFragmentShader');
-
-        // パイプラインを作成
-        const pipelineDescriptor = new WebGPURenderPipelineDescriptor();
-        pipelineDescriptor.vertexFunction = funcVertex;
-        pipelineDescriptor.fragmentFunction = funcFragment;
-        pipelineDescriptor.colorAttachments[0].pixelFormat = gpu.PixelFormatBGRA8Unorm;
-
-        renderPipelineState = gpu.createRenderPipelineState(pipelineDescriptor);
-      }
-
-      function makeBuffers() {
-        // バッファーを作成
-        bufferPosition = gpu.createBuffer(positionData);
-        bufferColor = gpu.createBuffer(colorData);
-      }
-
-      function draw() {
-        // ドローアブルを取得
-        const drawable = gpu.nextDrawable();
-        renderPassDescriptor.colorAttachments[0].texture = drawable.texture;
-
-        // コマンドバッファを作成
-        const commandBuffer = commandQueue.createCommandBuffer();
-
-        // コマンドエンコーダーを作成
-        const encoder = commandBuffer.createRenderCommandEncoderWithDescriptor(renderPassDescriptor);
-
-        encoder.setRenderPipelineState(renderPipelineState);
-        // バッファーを頂点シェーダーに送る
-        encoder.setVertexBuffer(bufferPosition, 0, 0);
-        encoder.setVertexBuffer(bufferColor, 0, 1);
-        // 三角形を作成
-        encoder.drawPrimitives(gpu.PrimitiveTypeTriangle, 0, 3);
-
-        // エンコード完了
-        encoder.endEncoding();
-        // 表示するドローアブルを登録
-        commandBuffer.presentDrawable(drawable);
-        // コマンドバッファをコミット（エンキュー）
-        commandBuffer.commit();
-      }
-    }
-  </script>
 </body>
 </html>
