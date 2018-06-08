@@ -13,8 +13,8 @@ class ViewController: NSViewController {
     
     private let colorData: [Float] = [
         1, 1, 1, 1,
-        1, 1, 0, 1,
-        1, 0, 1, 1,
+        0, 1, 0, 1,
+        0, 1, 1, 1,
     ]
     
     private var commandQueue: MTLCommandQueue!

@@ -6,8 +6,8 @@ const positionData = new Float32Array([
 
 const colorData = new Float32Array([
   1, 1, 1, 1,
-  1, 1, 0, 1,
-  1, 0, 1, 1,
+  0, 1, 0, 1,
+  0, 1, 1, 1,
 ]);
 
 let gpu;
