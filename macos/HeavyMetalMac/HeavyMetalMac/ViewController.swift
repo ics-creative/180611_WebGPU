@@ -86,19 +86,16 @@ class ViewController: NSViewController {
     
     func draw() {
         // ドローアブルを取得
-        guard let drawable = metalLayer.nextDrawable()
-            else {fatalError()}
+        guard let drawable = metalLayer.nextDrawable() else {fatalError()}
         renderPassDescriptor.colorAttachments[0].texture = drawable.texture
         
         // コマンドバッファを作成
-        guard let commandBuffer = commandQueue.makeCommandBuffer()
-            else {fatalError()}
+        guard let commandBuffer = commandQueue.makeCommandBuffer() else {fatalError()}
         
         // エンコーダ生成
         let encoder = commandBuffer.makeRenderCommandEncoder(descriptor: renderPassDescriptor)!
         
-        guard let renderPipeline = renderPipeline
-            else {fatalError()}
+        guard let renderPipeline = renderPipeline else {fatalError()}
         encoder.setRenderPipelineState(renderPipeline)
         // バッファーを頂点シェーダーに送る
         encoder.setVertexBuffer(bufferPosition, offset: 0, index: 0)
@@ -110,10 +107,8 @@ class ViewController: NSViewController {
        
         // エンコード完了
         encoder.endEncoding()
-        
         // 表示するドローアブルを登録
         commandBuffer.present(drawable)
-        
         // コマンドバッファをコミット（エンキュー）
         commandBuffer.commit()
         
