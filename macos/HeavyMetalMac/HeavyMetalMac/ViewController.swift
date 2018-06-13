@@ -90,10 +90,12 @@ class ViewController: NSViewController {
         renderPassDescriptor.colorAttachments[0].texture = drawable.texture
         
         // コマンドバッファを作成
-        guard let commandBuffer = commandQueue.makeCommandBuffer() else {fatalError()}
+        guard let cBuffer = commandQueue.makeCommandBuffer() else {fatalError()}
         
         // エンコーダ生成
-        let encoder = commandBuffer.makeRenderCommandEncoder(descriptor: renderPassDescriptor)!
+        let encoder = cBuffer.makeRenderCommandEncoder(
+            descriptor: renderPassDescriptor
+        )!
         
         guard let renderPipeline = renderPipeline else {fatalError()}
         encoder.setRenderPipelineState(renderPipeline)
@@ -108,11 +110,8 @@ class ViewController: NSViewController {
         // エンコード完了
         encoder.endEncoding()
         // 表示するドローアブルを登録
-        commandBuffer.present(drawable)
+        cBuffer.present(drawable)
         // コマンドバッファをコミット（エンキュー）
-        commandBuffer.commit()
-        
-        // 完了まで待つ
-        commandBuffer.waitUntilCompleted()
+        cBuffer.commit()
     }
 }

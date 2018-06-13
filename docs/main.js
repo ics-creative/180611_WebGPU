@@ -92,23 +92,27 @@ export async function init() {
     renderPassDescriptor.colorAttachments[0].texture = drawable.texture;
 
     // コマンドバッファを作成
-    const commandBuffer = commandQueue.createCommandBuffer();
+    const cBuffer = commandQueue.createCommandBuffer();
 
     // コマンドエンコーダーを作成
-    const encoder = commandBuffer.createRenderCommandEncoderWithDescriptor(renderPassDescriptor);
+    const encoder = cBuffer.createRenderCommandEncoderWithDescriptor(
+        renderPassDescriptor
+    );
 
     encoder.setRenderPipelineState(renderPipelineState);
     // バッファーを頂点シェーダーに送る
     encoder.setVertexBuffer(bufferPosition, 0, 0);
     encoder.setVertexBuffer(bufferColor, 0, 1);
     // 三角形を作成
-    encoder.drawPrimitives(gpu.PrimitiveTypeTriangle, 0, 3);
+    encoder.drawPrimitives(gpu.PrimitiveTypeTriangle, 
+                           0, 
+                           3);
 
     // エンコード完了
     encoder.endEncoding();
     // 表示するドローアブルを登録
-    commandBuffer.presentDrawable(drawable);
+    cBuffer.presentDrawable(drawable);
     // コマンドバッファをコミット（エンキュー）
-    commandBuffer.commit();
+    cBuffer.commit();
   }
 }
