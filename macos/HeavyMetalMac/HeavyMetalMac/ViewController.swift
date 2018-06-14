@@ -21,7 +21,7 @@ class ViewController: NSViewController {
     private var renderPassDescriptor: MTLRenderPassDescriptor!
     private var bufferPosition: MTLBuffer!
     private var bufferColor: MTLBuffer!
-    private var renderPipeline: MTLRenderPipelineState!
+    private var renderPipelineState: MTLRenderPipelineState!
     private var metalLayer: CAMetalLayer!;
     
     override func loadView() {
@@ -81,24 +81,21 @@ class ViewController: NSViewController {
         descriptor.vertexFunction = library.makeFunction(name: "myVertexShader")
         descriptor.fragmentFunction = library.makeFunction(name: "myFragmentShader")
         descriptor.colorAttachments[0].pixelFormat = .bgra8Unorm
-        renderPipeline = try! device.makeRenderPipelineState(descriptor: descriptor)
+        // レンダーパイプラインステートを作成
+        renderPipelineState = try! device.makeRenderPipelineState(descriptor: descriptor)
     }
     
     func draw() {
         // ドローアブルを取得
         guard let drawable = metalLayer.nextDrawable() else {fatalError()}
         renderPassDescriptor.colorAttachments[0].texture = drawable.texture
-        
         // コマンドバッファを作成
         guard let cBuffer = commandQueue.makeCommandBuffer() else {fatalError()}
-        
         // エンコーダ生成
         let encoder = cBuffer.makeRenderCommandEncoder(
             descriptor: renderPassDescriptor
         )!
-        
-        guard let renderPipeline = renderPipeline else {fatalError()}
-        encoder.setRenderPipelineState(renderPipeline)
+        encoder.setRenderPipelineState(renderPipelineState)
         // バッファーを頂点シェーダーに送る
         encoder.setVertexBuffer(bufferPosition, offset: 0, index: 0)
         encoder.setVertexBuffer(bufferColor, offset: 0, index:1)
@@ -106,7 +103,6 @@ class ViewController: NSViewController {
         encoder.drawPrimitives(type: MTLPrimitiveType.triangle,
                                vertexStart: 0,
                                vertexCount: 3)
-       
         // エンコード完了
         encoder.endEncoding()
         // 表示するドローアブルを登録
